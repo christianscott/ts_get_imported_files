@@ -1,6 +1,6 @@
 import { Token, TokenKind } from "./token";
 
-type Dependency = { path: Token };
+export type Dependency = { path: Token };
 
 export function parse(tokens: readonly Token[]): readonly Dependency[] {
   return new Parser(tokens).parse();

@@ -1,3 +1,4 @@
+import { Preconditions } from "./preconditions";
 import { Char, Source, Token, TokenKind } from "./token";
 
 export function lex(source: Source): readonly Token[] {
@@ -73,7 +74,7 @@ class Lexer {
   }
 
   private identifier(): void {
-    this.eatWhile((c) => isAlphanumeric(c));
+    this.eatWhile((c) => isAlphaNumeric(c));
     const text = this.getCurrentLexeme();
     const kind = tokenKindForText(text);
     this.addBasicToken(kind);
@@ -111,7 +112,7 @@ class Lexer {
 
   private advance(): Char {
     this.current++;
-    return this.source[this.current - 1];
+    return this.source.chars[this.current - 1];
   }
 
   private isAtEnd(): boolean {
@@ -147,18 +148,9 @@ function tokenKindForText(text: string): TokenKind {
 }
 
 function isAlphabetic(c: Char): boolean {
-  return false;
+  return /[a-zA-Z]/.test(c);
 }
 
-function isAlphanumeric(c: Char): boolean {
-  return false;
-}
-
-module Preconditions {
-  export function checkExists<T>(value: T | undefined | null): T {
-    if (value != null) {
-      return value;
-    }
-    throw new Error(`expected value to be non-null`);
-  }
+function isAlphaNumeric(c: Char) {
+  return /[a-zA-Z0-9]/.test(c);
 }

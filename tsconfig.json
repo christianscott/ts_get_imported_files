@@ -5,7 +5,9 @@
     "jsx": "preserve",
     "sourceMap": true,
     "lib": ["ES6"],
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "outDir": "target/ts",
+    "types": ["node"]
   },
   "exclude": ["node_modules", "**/node_modules/*"]
 }
