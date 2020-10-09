@@ -57,6 +57,18 @@ mod find_dependencies {
     }
 
     #[test]
+    fn test_multiple_imports() {
+        assert_eq!(
+            deps("import first from 'first';\nimport { second } from 'second'; import * as third from 'third'"),
+            vec![
+                TokenKind::Str("first".to_string()),
+                TokenKind::Str("second".to_string()),
+                TokenKind::Str("third".to_string()),
+            ]
+        );
+    }
+
+    #[test]
     fn test_destructured_import() {
         assert_eq!(
             deps("import {foo} from 'bar'"),
