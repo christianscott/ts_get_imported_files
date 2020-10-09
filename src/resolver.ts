@@ -3,7 +3,7 @@ import { Dependency } from "./parse";
 import { Preconditions } from "./preconditions";
 
 export class Resolver {
-  private matchPath: tsConfigPaths.MatchPath;
+  private readonly matchPath: tsConfigPaths.MatchPath;
 
   constructor(
     tsConfigFilePath: string,

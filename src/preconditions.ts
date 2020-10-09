@@ -1,5 +1,5 @@
-export module Preconditions {
-  export function checkExists<T>(value: T | undefined | null): T {
+export class Preconditions {
+  public static checkExists<T>(value: T | undefined | null): T {
     if (value != null) {
       return value;
     }
