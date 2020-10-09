@@ -13,7 +13,7 @@ fn find_dependencies(source: &str) -> Vec<dependency::Dependency> {
 }
 
 #[cfg(test)]
-mod test {
+mod find_dependencies {
     use super::*;
     use token::TokenKind;
 
@@ -52,6 +52,22 @@ mod test {
     fn test_namespace_import() {
         assert_eq!(
             deps("import * as foo from 'bar'"),
+            vec![TokenKind::Str("bar".to_string())]
+        );
+    }
+
+    #[test]
+    fn test_destructured_export() {
+        assert_eq!(
+            deps("export {foo} from 'bar'"),
+            vec![TokenKind::Str("bar".to_string())]
+        );
+    }
+
+    #[test]
+    fn test_namespace_export() {
+        assert_eq!(
+            deps("export * as foo from 'bar'"),
             vec![TokenKind::Str("bar".to_string())]
         );
     }

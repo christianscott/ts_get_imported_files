@@ -163,7 +163,7 @@ mod test {
     }
 
     #[test]
-    fn test_var() {
+    fn test_default_import() {
         assert_eq!(
             to_token_kinds("import foo from './bar'"),
             vec![Import, Identifier, Frm, Str("./bar".to_string()), Eof],
@@ -191,6 +191,22 @@ mod test {
     }
 
     #[test]
+    fn test_namespace_import() {
+        assert_eq!(
+            to_token_kinds("import * as foo from 'bar'"),
+            vec![
+                Import,
+                Star,
+                As,
+                Identifier,
+                Frm,
+                Str("bar".to_string()),
+                Eof,
+            ],
+        );
+    }
+
+    #[test]
     fn test_dynamic_import() {
         assert_eq!(
             to_token_kinds("const { one, two, three } = import(`../../something`)"),
@@ -207,6 +223,40 @@ mod test {
                 LeftParen,
                 Str("../../something".to_string()),
                 RightParen,
+                Eof,
+            ],
+        );
+    }
+
+    #[test]
+    fn test_destructured_export() {
+        assert_eq!(
+            to_token_kinds("export { one, two } from 'bar'"),
+            vec![
+                Export,
+                LeftBrace,
+                Identifier,
+                Comma,
+                Identifier,
+                RightBrace,
+                Frm,
+                Str("bar".to_string()),
+                Eof,
+            ],
+        );
+    }
+
+    #[test]
+    fn test_namespace_export() {
+        assert_eq!(
+            to_token_kinds("export * as bar from 'bar'"),
+            vec![
+                Export,
+                Star,
+                As,
+                Identifier,
+                Frm,
+                Str("bar".to_string()),
                 Eof,
             ],
         );

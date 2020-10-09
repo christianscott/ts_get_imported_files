@@ -147,7 +147,44 @@ impl Parser {
     }
 
     fn export(&mut self) -> Result<Dependency, ParseErr> {
-        unimplemented!()
+        if did_eat!(self, TokenKind::Export) {
+            self.destructured_export()
+        } else {
+            unreachable!()
+        }
+    }
+
+    fn destructured_export(&mut self) -> Result<Dependency, ParseErr> {
+        if did_eat!(self, TokenKind::LeftBrace) {
+            while !check!(self, TokenKind::RightBrace) && !self.is_at_end() {
+                // skip over symbols, we don't really care what's going on here
+                self.advance();
+            }
+            consume!(
+                self,
+                TokenKind::RightBrace,
+                "Expect } after destructured exprt symbols."
+            )?;
+            consume!(self, TokenKind::Frm, "Expect 'from' after destructure.")?;
+            Ok(Dependency {
+                path: consume!(self, TokenKind::Str(_), "Expect a string.")?,
+            })
+        } else {
+            self.namespace_export()
+        }
+    }
+
+    fn namespace_export(&mut self) -> Result<Dependency, ParseErr> {
+        if did_eat!(self, TokenKind::Star) {
+            consume!(self, TokenKind::As, "Expect 'as' after '*'.")?;
+            consume!(self, TokenKind::Identifier, "Expect identifier after 'as'.")?;
+            consume!(self, TokenKind::Frm, "Expect 'from' after identifier.")?;
+            Ok(Dependency {
+                path: consume!(self, TokenKind::Str(_), "Expect a string.")?,
+            })
+        } else {
+            unreachable!()
+        }
     }
 
     // Utilities
@@ -288,5 +325,23 @@ mod test {
             ]),
             vec![Dependency { path }],
         );
+    }
+
+    #[test]
+    fn test_namespace_export() {
+        let token = new_token_factory();
+        let path = token(Str("bar".to_string()));
+        assert_eq!(
+            parse(vec![
+                token(Export),
+                token(Star),
+                token(As),
+                token(Identifier),
+                token(Frm),
+                path.clone(),
+                token(Eof),
+            ],),
+            vec![Dependency { path }],
+        )
     }
 }
