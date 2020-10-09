@@ -33,6 +33,22 @@ mod find_dependencies {
     }
 
     #[test]
+    fn test_dynamic_import_with_assignment() {
+        assert_eq!(
+            deps("const foo = import('bar');"),
+            vec![TokenKind::Str("bar".to_string())],
+        );
+    }
+
+    #[test]
+    fn test_dynamic_import_with_await() {
+        assert_eq!(
+            deps("await import('bar');"),
+            vec![TokenKind::Str("bar".to_string())],
+        );
+    }
+
+    #[test]
     fn test_default_import() {
         assert_eq!(
             deps("import foo from 'bar'"),

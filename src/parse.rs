@@ -62,7 +62,8 @@ impl Parser {
 
         while !self.is_at_end() {
             match self.import_or_export() {
-                Ok(dep) => deps.push(dep),
+                Ok(Some(dep)) => deps.push(dep),
+                Ok(None) => {} // do nothing
                 Err(ParseErr { message, token }) => {
                     println!("parse error at {:?}: {}", token.kind, message)
                 }
@@ -72,7 +73,7 @@ impl Parser {
         deps
     }
 
-    fn import_or_export(&mut self) -> Result<Dependency, ParseErr> {
+    fn import_or_export(&mut self) -> Result<Option<Dependency>, ParseErr> {
         if did_eat!(self, TokenKind::Import) {
             self.import()
         } else {
@@ -80,7 +81,7 @@ impl Parser {
         }
     }
 
-    fn import(&mut self) -> Result<Dependency, ParseErr> {
+    fn import(&mut self) -> Result<Option<Dependency>, ParseErr> {
         if did_eat!(self, TokenKind::LeftParen) {
             self.dynamic_import()
         } else {
@@ -88,7 +89,7 @@ impl Parser {
         }
     }
 
-    fn dynamic_import(&mut self) -> Result<Dependency, ParseErr> {
+    fn dynamic_import(&mut self) -> Result<Option<Dependency>, ParseErr> {
         let path = consume!(self, TokenKind::Str(_), "Expect a string")?;
         consume!(
             self,
@@ -96,21 +97,21 @@ impl Parser {
             "Expect ) after dynamic import."
         )?;
         // TODO: eat semicolon here?
-        Ok(Dependency { path })
+        Ok(Some(Dependency { path }))
     }
 
-    fn default_import(&mut self) -> Result<Dependency, ParseErr> {
+    fn default_import(&mut self) -> Result<Option<Dependency>, ParseErr> {
         if did_eat!(self, TokenKind::Identifier) {
             consume!(self, TokenKind::Frm, "Expect 'from' keyword.")?;
             let path = consume!(self, TokenKind::Str(_), "Expect a string.")?;
             // TODO: semicolon?
-            Ok(Dependency { path })
+            Ok(Some(Dependency { path }))
         } else {
             self.destructured_import()
         }
     }
 
-    fn destructured_import(&mut self) -> Result<Dependency, ParseErr> {
+    fn destructured_import(&mut self) -> Result<Option<Dependency>, ParseErr> {
         if did_eat!(self, TokenKind::LeftBrace) {
             while !check!(self, TokenKind::RightBrace) && !self.is_at_end() {
                 // skip over symbols, we don't really care what's going on here
@@ -122,22 +123,22 @@ impl Parser {
                 "Expect } after destructured import symbols."
             )?;
             consume!(self, TokenKind::Frm, "Expect 'from' after destructure.")?;
-            Ok(Dependency {
+            Ok(Some(Dependency {
                 path: consume!(self, TokenKind::Str(_), "Expect a string.")?,
-            })
+            }))
         } else {
             self.namespace_import()
         }
     }
 
-    fn namespace_import(&mut self) -> Result<Dependency, ParseErr> {
+    fn namespace_import(&mut self) -> Result<Option<Dependency>, ParseErr> {
         if did_eat!(self, TokenKind::Star) {
             consume!(self, TokenKind::As, "Expect 'as' after '*'.")?;
             consume!(self, TokenKind::Identifier, "Expect identifier after 'as'.")?;
             consume!(self, TokenKind::Frm, "Expect 'from' after identifier.")?;
-            Ok(Dependency {
+            Ok(Some(Dependency {
                 path: consume!(self, TokenKind::Str(_), "Expect a string.")?,
-            })
+            }))
         } else {
             Err(ParseErr {
                 token: self.peek(),
@@ -146,15 +147,16 @@ impl Parser {
         }
     }
 
-    fn export(&mut self) -> Result<Dependency, ParseErr> {
+    fn export(&mut self) -> Result<Option<Dependency>, ParseErr> {
         if did_eat!(self, TokenKind::Export) {
             self.destructured_export()
         } else {
-            unreachable!()
+            self.advance();
+            Ok(None)
         }
     }
 
-    fn destructured_export(&mut self) -> Result<Dependency, ParseErr> {
+    fn destructured_export(&mut self) -> Result<Option<Dependency>, ParseErr> {
         if did_eat!(self, TokenKind::LeftBrace) {
             while !check!(self, TokenKind::RightBrace) && !self.is_at_end() {
                 // skip over symbols, we don't really care what's going on here
@@ -166,24 +168,25 @@ impl Parser {
                 "Expect } after destructured exprt symbols."
             )?;
             consume!(self, TokenKind::Frm, "Expect 'from' after destructure.")?;
-            Ok(Dependency {
+            Ok(Some(Dependency {
                 path: consume!(self, TokenKind::Str(_), "Expect a string.")?,
-            })
+            }))
         } else {
             self.namespace_export()
         }
     }
 
-    fn namespace_export(&mut self) -> Result<Dependency, ParseErr> {
+    fn namespace_export(&mut self) -> Result<Option<Dependency>, ParseErr> {
         if did_eat!(self, TokenKind::Star) {
             consume!(self, TokenKind::As, "Expect 'as' after '*'.")?;
             consume!(self, TokenKind::Identifier, "Expect identifier after 'as'.")?;
             consume!(self, TokenKind::Frm, "Expect 'from' after identifier.")?;
-            Ok(Dependency {
+            Ok(Some(Dependency {
                 path: consume!(self, TokenKind::Str(_), "Expect a string.")?,
-            })
+            }))
         } else {
-            unreachable!()
+            self.advance();
+            Ok(None)
         }
     }
 
@@ -254,6 +257,30 @@ mod test {
             ]),
             vec![Dependency { path }],
         );
+    }
+
+    #[test]
+    fn test_dynamic_import_with_assignment() {
+        let token = new_token_factory();
+        let path = token(Str("../../something".to_string()));
+        assert_eq!(
+            parse(vec![
+                token(Identifier),
+                token(LeftBrace),
+                token(Identifier),
+                token(Comma),
+                token(Identifier),
+                token(Comma),
+                token(Identifier),
+                token(RightBrace),
+                token(Import),
+                token(LeftParen),
+                path.clone(),
+                token(RightParen),
+                token(Eof),
+            ]),
+            vec![Dependency { path }],
+        )
     }
 
     #[test]
