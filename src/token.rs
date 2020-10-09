@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 use std::rc::Rc;
 
-#[derive(Debug, Hash)]
+#[derive(Debug, Hash, Eq, PartialEq)]
 pub struct Source {
     name: String,
     chars: Vec<char>,
@@ -32,7 +32,7 @@ impl Source {
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Range(pub usize, pub usize);
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq)]
 pub struct Token {
     pub kind: TokenKind,
     pub span: Range,
@@ -55,7 +55,7 @@ impl PartialEq for Token {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum TokenKind {
     // SingleCharacterTokens
     LeftParen,
