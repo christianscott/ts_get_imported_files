@@ -6,8 +6,10 @@
     "sourceMap": true,
     "lib": ["ES6"],
     "downlevelIteration": true,
-    "outDir": "target/ts",
-    "types": ["node", "jest"]
+    "outDir": "dist",
+    "types": ["node", "jest"],
+    "declaration": true
   },
-  "exclude": ["node_modules", "**/node_modules/*"]
+  "include": ["src/"],
+  "exclude": ["node_modules", "**/node_modules/*", "src/tests/fixtures"]
 }

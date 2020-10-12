@@ -1,10 +1,14 @@
 {
   "name": "@christianscott/ts_get_imported_files",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "repository": "https://github.com/christianscott/typescript_dependency_tree.git",
   "author": "Christian Scott <christian.s@canva.com>",
   "license": "MIT",
+  "scripts": {
+    "prepare": "tsc"
+  },
   "devDependencies": {
     "@babel/preset-env": "^7.11.5",
     "@babel/preset-typescript": "^7.10.4",
