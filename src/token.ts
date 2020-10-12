@@ -1,3 +1,5 @@
+import { Preconditions } from "./preconditions";
+
 export enum TokenKind {
   // SingleCharacterTokens
   LeftParen,
@@ -29,11 +31,24 @@ export type Token = {
   lexeme?: string;
 };
 
+export type Char = string & { __char: never };
+
 export class Source {
-  readonly chars: readonly Char[];
+  private readonly chars: readonly Char[];
+
   constructor(readonly name: string, source: string) {
     this.chars = [...source] as Char[];
   }
-}
 
-export type Char = string & { __char: never };
+  charsWithin([start, end]: [number, number]): string {
+    return this.chars.slice(start, end).join("");
+  }
+
+  charAt(index: number): Char {
+    return Preconditions.checkExists(this.chars[index]);
+  }
+
+  length() {
+    return this.chars.length;
+  }
+}

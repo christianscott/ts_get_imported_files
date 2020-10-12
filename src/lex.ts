@@ -1,4 +1,3 @@
-import { Preconditions } from "./preconditions";
 import { Char, Source, Token, TokenKind } from "./token";
 
 export function lex(source: Source): readonly Token[] {
@@ -84,8 +83,8 @@ class Lexer {
     return this.getLexeme([this.start, this.current]);
   }
 
-  private getLexeme([start, end]: [number, number]): string {
-    return this.source.chars.slice(start, end).join("");
+  private getLexeme(range: [number, number]): string {
+    return this.source.charsWithin(range);
   }
 
   private addBasicToken(kind: TokenKind, lexeme?: string): void {
@@ -107,16 +106,16 @@ class Lexer {
   }
 
   private peekNth(n: number): Char {
-    return Preconditions.checkExists(this.source.chars[this.current + n]);
+    return this.source.charAt(this.current + n);
   }
 
   private advance(): Char {
     this.current++;
-    return this.source.chars[this.current - 1];
+    return this.source.charAt(this.current - 1);
   }
 
   private isAtEnd(): boolean {
-    return this.current >= this.source.chars.length;
+    return this.current >= this.source.length();
   }
 
   private token(kind: TokenKind, lexeme?: string): Token {
