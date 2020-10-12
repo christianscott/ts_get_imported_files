@@ -1,12 +1,30 @@
+import { promises as fs } from "fs";
 import { lex } from "./lex";
 import { parse } from "./parse";
 import { Resolver } from "./resolver";
 import { Source } from "./token";
 
-const source = new Source("my_module", "import foo from 'bar';");
-const tokens = lex(source);
+export type GetImportedFilesOpts = { filename: string } & (
+  | { resolver: Resolver }
+  | {
+      tsconfigFilePath: string;
+      resolvableExtensions: string[];
+    }
+);
 
-const deps = parse(tokens);
+export async function getImportedFiles(
+  opts: GetImportedFilesOpts
+): Promise<string[]> {
+  const source = new Source(
+    opts.filename,
+    await fs.readFile(opts.filename, { encoding: "utf8" })
+  );
+  const tokens = lex(source);
+  const deps = parse(tokens);
 
-const resolver = new Resolver("tsconfig.json", [".ts", ".ts"]);
-console.log(deps.map((dep) => resolver.resolve(dep)));
+  const resolver =
+    "resolver" in opts
+      ? opts.resolver
+      : new Resolver(opts.tsconfigFilePath, opts.resolvableExtensions);
+  return deps.map((dep) => resolver.resolve(dep));
+}
